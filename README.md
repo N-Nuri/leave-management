@@ -36,7 +36,7 @@ A transparent, automated leave management tool that helps employees track their 
 |---|---|
 | Backend | Java 17+, Spring Boot 3.x |
 | Security | Spring Security, JWT |
-| Database | PostgreSQL 18 |
+| Database | Supabase |
 | DB Migration | Flyway |
 | Build Tool | Maven |
 | Frontend | React.js / Angular |
