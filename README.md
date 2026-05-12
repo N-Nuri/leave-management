@@ -36,7 +36,7 @@ A transparent, automated leave management tool that helps employees track their 
 |---|---|
 | Backend | Java 17+, Spring Boot 3.x |
 | Security | Spring Security, JWT |
-| Database | Supabase |
+| Database | Supabase (PostgreSQL) |
 | DB Migration | Flyway |
 | Build Tool | Maven |
 | Frontend | React.js / Angular |
@@ -107,9 +107,9 @@ Make sure you have the following installed:
 
 - Java 17 or higher (`java -version`)
 - Node.js 18+ (`node -v`)
-- PostgreSQL 16+ (`psql --version`)
 - Maven (`mvn -version`)
 - Docker & Docker Compose (optional, for containerized setup)
+- A [Supabase](https://supabase.com) account and project (free tier is sufficient)
 
 ### Option 1 — Run with Docker Compose (Recommended)
 
@@ -125,16 +125,19 @@ docker-compose up --build
 App will be available at:
 - Frontend: `http://localhost:3000`
 - Backend API: `http://localhost:8080`
-- pgAdmin: `http://localhost:5050`
+
+> Database is hosted on Supabase — no local DB container needed.
 
 ### Option 2 — Run Manually
 
-**1. Set up the database**
+**1. Get your Supabase connection string**
 
-```bash
-# Create database
-psql -U postgres -c "CREATE DATABASE leave_management;"
-```
+1. Go to [supabase.com](https://supabase.com) → your project → **Settings → Database**
+2. Under **Connection string**, select **JDBC**
+3. Copy the connection string — it looks like:
+   ```
+   jdbc:postgresql://db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   ```
 
 **2. Configure environment variables**
 
@@ -143,9 +146,9 @@ Create `backend/src/main/resources/application-local.yml`:
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/leave_management
+    url: jdbc:postgresql://db.xxxxxxxxxxxx.supabase.co:5432/postgres
     username: postgres
-    password: your_password
+    password: your-supabase-db-password
   jpa:
     hibernate:
       ddl-auto: validate
@@ -155,6 +158,9 @@ app:
     secret: your-secret-key-min-256-bits
     expiration: 28800000  # 8 hours in ms
 ```
+
+> ⚠️ **Security note:** Never commit `application-local.yml` to Git. It is already listed in `.gitignore`.  
+> The Supabase `anon key` and `service_role key` are **not needed** in Spring Boot — those are for direct frontend API calls only.
 
 **3. Run the backend**
 
