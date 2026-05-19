@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "leave_requests")
@@ -20,8 +19,8 @@ import java.util.UUID;
 public class LeaveRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
@@ -37,13 +36,13 @@ public class LeaveRequest {
     private Double daysCount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "leave_type", nullable = false)
+    @Column(name = "leave_type", nullable = false, columnDefinition = "leave_type_enum")
     private LeaveType leaveType;
 
     private String reason;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "request_status")
     @Builder.Default
     private LeaveStatus status = LeaveStatus.PENDING;
 
@@ -57,4 +56,8 @@ public class LeaveRequest {
     @Column(name = "created_at", nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at", nullable = false)
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

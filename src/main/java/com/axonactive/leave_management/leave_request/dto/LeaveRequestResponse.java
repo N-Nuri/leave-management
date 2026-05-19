@@ -7,14 +7,13 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
 public class LeaveRequestResponse {
 
-    private UUID id;
-    private UUID employeeId;
+    private Long id;
+    private Long employeeId;
     private String employeeName;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -22,7 +21,7 @@ public class LeaveRequestResponse {
     private LeaveType leaveType;
     private String reason;
     private LeaveStatus status;
-    private UUID reviewedById;
+    private Long reviewedById;
     private String reviewNote;
     private LocalDateTime createdAt;
 }

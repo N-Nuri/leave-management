@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +29,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
     @Override
     @Transactional
-    public LeaveRequestResponse submit(LeaveRequestDTO dto, UUID employeeId) {
+    public LeaveRequestResponse submit(LeaveRequestDTO dto, Long employeeId) {
         if (dto.getStartDate().isAfter(dto.getEndDate())) {
             throw new InvalidLeaveRequestException("Start date must not be after end date");
         }
@@ -55,7 +55,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
     }
 
     @Override
-    public List<LeaveRequestResponse> getMyRequests(UUID employeeId) {
+    public List<LeaveRequestResponse> getMyRequests(Long employeeId) {
         return leaveRequestRepository.findAllByEmployee_Id(employeeId)
                 .stream()
                 .map(this::toResponse)
@@ -63,7 +63,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
     }
 
     @Override
-    public LeaveRequestResponse getById(UUID id) {
+    public LeaveRequestResponse getById(Long id) {
         LeaveRequest request = leaveRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Leave request not found with id: " + id));
         return toResponse(request);
@@ -71,7 +71,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
     @Override
     @Transactional
-    public LeaveRequestResponse cancel(UUID requestId, UUID employeeId) {
+    public LeaveRequestResponse cancel(Long requestId, Long employeeId) {
         LeaveRequest request = leaveRequestRepository.findById(requestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Leave request not found with id: " + requestId));
 
@@ -84,6 +84,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         }
 
         request.setStatus(LeaveStatus.CANCELLED);
+        request.setUpdatedAt(LocalDateTime.now());
         return toResponse(leaveRequestRepository.save(request));
     }
 

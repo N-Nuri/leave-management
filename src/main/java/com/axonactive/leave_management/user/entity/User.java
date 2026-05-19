@@ -2,8 +2,8 @@ package com.axonactive.leave_management.user.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -11,8 +11,8 @@ import java.util.UUID;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -24,20 +24,18 @@ public class User {
     private String fullName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "user_role")
     private Role role;
 
     @ManyToOne
     @JoinColumn(name = "manager_id")
     private User manager;
 
-    private String department;
-
-    @Column(name = "is_active")
-    private boolean isActive = true;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
 
     public enum Role {
         EMPLOYEE, MANAGER

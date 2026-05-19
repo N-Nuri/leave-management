@@ -1,11 +1,12 @@
+CREATE TYPE IF NOT EXISTS user_role AS ENUM ('EMPLOYEE', 'MANAGER');
+
 CREATE TABLE IF NOT EXISTS users (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email       VARCHAR(255) NOT NULL UNIQUE,
+    id            BIGSERIAL PRIMARY KEY,
+    email         VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    full_name   VARCHAR(255) NOT NULL,
-    role        VARCHAR(50)  NOT NULL,
-    manager_id  UUID REFERENCES users(id),
-    department  VARCHAR(255),
-    is_active   BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+    full_name     VARCHAR(100) NOT NULL,
+    role          user_role    NOT NULL DEFAULT 'EMPLOYEE',
+    manager_id    BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );

@@ -16,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/leave-requests")
@@ -31,7 +30,7 @@ public class LeaveRequestController {
     public ResponseEntity<LeaveRequestResponse> submit(
             @Valid @RequestBody LeaveRequestDTO dto,
             @AuthenticationPrincipal UserDetails principal) {
-        UUID employeeId = resolveUserId(principal);
+        Long employeeId = resolveUserId(principal);
         return ResponseEntity.status(HttpStatus.CREATED).body(leaveRequestService.submit(dto, employeeId));
     }
 
@@ -39,25 +38,25 @@ public class LeaveRequestController {
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<List<LeaveRequestResponse>> getMyRequests(
             @AuthenticationPrincipal UserDetails principal) {
-        UUID employeeId = resolveUserId(principal);
+        Long employeeId = resolveUserId(principal);
         return ResponseEntity.ok(leaveRequestService.getMyRequests(employeeId));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<LeaveRequestResponse> getById(@PathVariable UUID id) {
+    public ResponseEntity<LeaveRequestResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(leaveRequestService.getById(id));
     }
 
     @PutMapping("/{id}/cancel")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<LeaveRequestResponse> cancel(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @AuthenticationPrincipal UserDetails principal) {
-        UUID employeeId = resolveUserId(principal);
+        Long employeeId = resolveUserId(principal);
         return ResponseEntity.ok(leaveRequestService.cancel(id, employeeId));
     }
 
-    private UUID resolveUserId(UserDetails principal) {
+    private Long resolveUserId(UserDetails principal) {
         User user = userRepository.findByEmail(principal.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + principal.getUsername()));
         return user.getId();
