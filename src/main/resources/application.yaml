@@ -8,9 +8,13 @@ spring:
       maximum-pool-size: 5
       minimum-idle: 2
       connection-timeout: 20000
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
