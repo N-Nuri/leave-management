@@ -1,5 +1,12 @@
-CREATE TYPE IF NOT EXISTS leave_type_enum AS ENUM ('ANNUAL', 'SICK', 'UNPAID', 'OTHER');
-CREATE TYPE IF NOT EXISTS request_status  AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED');
+DO $$ BEGIN
+    CREATE TYPE leave_type_enum AS ENUM ('ANNUAL', 'SICK', 'UNPAID', 'OTHER');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE request_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS leave_requests (
     id          BIGSERIAL    PRIMARY KEY,
