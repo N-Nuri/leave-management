@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import apiClient from "../services/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface UserProfile {
@@ -408,17 +411,36 @@ const DEFAULT_USER: UserProfile = {
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function Profile({ user = DEFAULT_USER, onLogout }: ProfileProps) {
+export default function Profile() {
+  const { user: authUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [balance, setBalance] = useState({ remainingDays: 12, usedDays: 0, totalDays: 12, carriedOverDays: 0 });
 
-  const usedPct = Math.round((user.usedLeave / user.totalLeave) * 100);
+  useEffect(() => {
+    apiClient.get("/leave-balance/me").then(r => setBalance(r.data)).catch(console.error);
+  }, []);
+
+  const displayUser: UserProfile = {
+    name: authUser?.fullName ?? DEFAULT_USER.name,
+    department: "Axon Active Vietnam",
+    email: authUser?.email ?? DEFAULT_USER.email,
+    role: authUser?.role === "MANAGER" ? "Quản lý" : "Nhân viên",
+    employeeId: `EMP-${String(authUser?.id ?? 0).padStart(5, "0")}`,
+    joinDate: DEFAULT_USER.joinDate,
+    avatarInitials: (authUser?.fullName ?? "U").split(" ").map(w => w[0]).slice(-2).join("").toUpperCase(),
+    remainingLeave: balance.remainingDays,
+    usedLeave: balance.usedDays,
+    totalLeave: balance.totalDays + balance.carriedOverDays,
+  };
+
+  const user = displayUser;
+  const usedPct = user.totalLeave > 0 ? Math.round((user.usedLeave / user.totalLeave) * 100) : 0;
 
   const handleLogout = () => {
     setShowConfirm(false);
-    // TODO: call your auth logout here, e.g. authApi.logout()
-    // then redirect: navigate('/login')
-    if (onLogout) onLogout();
-    else alert("Đã đăng xuất (mock)");
+    logout();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -540,7 +562,7 @@ export default function Profile({ user = DEFAULT_USER, onLogout }: ProfileProps)
                 <strong>Đăng xuất khỏi hệ thống</strong>
                 Phiên làm việc của bạn sẽ kết thúc. Mọi dữ liệu chưa lưu sẽ bị mất.
               </div>
-              <button className="btn-logout" onClick={() => setShowConfirm(true)}>
+              <button className="btn-logout" type="button" onClick={() => setShowConfirm(true)}>
                 <i className="ti ti-logout" />
                 Đăng xuất
               </button>

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 // Tailwind is not used here — all styles are inline or via a <style> tag
 // to keep this file self-contained and portable.
@@ -315,6 +317,8 @@ interface LoginFormState {
 }
 
 export default function LoginPage() {
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState<LoginFormState>({
     email: "",
     password: "",
@@ -324,7 +328,12 @@ export default function LoginPage() {
     showPassword: false,
   });
 
-  const handleLogin = () => {
+  // Already logged in
+  if (user) {
+    navigate(user.role === "MANAGER" ? "/manager" : "/", { replace: true });
+  }
+
+  const handleLogin = async () => {
     if (!form.email || !form.password) {
       setForm((f) => ({ ...f, error: "Vui lòng nhập đầy đủ email và mật khẩu." }));
       return;
@@ -335,16 +344,18 @@ export default function LoginPage() {
     }
 
     setForm((f) => ({ ...f, loading: true, error: null }));
-
-    // TODO: replace with your real auth call
-    // e.g. await signIn(form.email, form.password)
-    setTimeout(() => {
+    try {
+      await login(form.email, form.password);
+      const stored = localStorage.getItem("user");
+      const u = stored ? JSON.parse(stored) : null;
+      navigate(u?.role === "MANAGER" ? "/manager" : "/", { replace: true });
+    } catch {
       setForm((f) => ({
         ...f,
         loading: false,
         error: "Email hoặc mật khẩu không đúng. Vui lòng thử lại.",
       }));
-    }, 1400);
+    }
   };
 
   return (

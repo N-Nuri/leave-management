@@ -26,7 +26,7 @@ public class LeaveRequestController {
     private final UserRepository userRepository;
 
     @PostMapping
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('EMPLOYEE') or hasRole('MANAGER')")
     public ResponseEntity<LeaveRequestResponse> submit(
             @Valid @RequestBody LeaveRequestDTO dto,
             @AuthenticationPrincipal UserDetails principal) {
@@ -35,7 +35,7 @@ public class LeaveRequestController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('EMPLOYEE') or hasRole('MANAGER')")
     public ResponseEntity<List<LeaveRequestResponse>> getMyRequests(
             @AuthenticationPrincipal UserDetails principal) {
         Long employeeId = resolveUserId(principal);
@@ -48,7 +48,7 @@ public class LeaveRequestController {
     }
 
     @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('EMPLOYEE') or hasRole('MANAGER')")
     public ResponseEntity<LeaveRequestResponse> cancel(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails principal) {

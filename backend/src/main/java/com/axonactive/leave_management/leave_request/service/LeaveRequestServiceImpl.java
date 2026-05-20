@@ -3,6 +3,7 @@ package com.axonactive.leave_management.leave_request.service;
 import com.axonactive.leave_management.common.exception.AccessDeniedException;
 import com.axonactive.leave_management.common.exception.InvalidLeaveRequestException;
 import com.axonactive.leave_management.common.exception.ResourceNotFoundException;
+import com.axonactive.leave_management.leave_balance.service.LeaveBalanceService;
 import com.axonactive.leave_management.leave_request.dto.LeaveRequestDTO;
 import com.axonactive.leave_management.leave_request.dto.LeaveRequestResponse;
 import com.axonactive.leave_management.leave_request.entity.LeaveRequest;
@@ -26,6 +27,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
     private final LeaveRequestRepository leaveRequestRepository;
     private final UserRepository userRepository;
+    private final LeaveBalanceService leaveBalanceService;
 
     @Override
     @Transactional
@@ -84,6 +86,66 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         }
 
         request.setStatus(LeaveStatus.CANCELLED);
+        request.setUpdatedAt(LocalDateTime.now());
+        return toResponse(leaveRequestRepository.save(request));
+    }
+
+    @Override
+    public List<LeaveRequestResponse> getTeamRequests(Long managerId) {
+        return leaveRequestRepository.findAllByEmployee_Manager_Id(managerId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LeaveRequestResponse> getPendingByManager(Long managerId) {
+        return leaveRequestRepository.findAllByEmployee_Manager_IdAndStatus(managerId, LeaveStatus.PENDING)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public LeaveRequestResponse approve(Long requestId, Long managerId) {
+        LeaveRequest request = leaveRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave request not found: " + requestId));
+
+        if (request.getStatus() != LeaveStatus.PENDING) {
+            throw new InvalidLeaveRequestException("Only PENDING requests can be approved");
+        }
+
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Manager not found: " + managerId));
+
+        if (request.getEmployee().getManager() == null ||
+                !request.getEmployee().getManager().getId().equals(managerId)) {
+            throw new AccessDeniedException("You are not the manager of this employee");
+        }
+
+        request.setStatus(LeaveStatus.APPROVED);
+        request.setReviewedBy(manager);
+        request.setUpdatedAt(LocalDateTime.now());
+        LeaveRequest saved = leaveRequestRepository.save(request);
+
+        leaveBalanceService.updateUsedDays(request.getEmployee().getId(), request.getDaysCount(), true);
+
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    public LeaveRequestResponse reject(Long requestId, Long managerId, String note) {
+        LeaveRequest request = leaveRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave request not found: " + requestId));
+
+        if (request.getStatus() != LeaveStatus.PENDING) {
+            throw new InvalidLeaveRequestException("Only PENDING requests can be rejected");
+        }
+
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Manager not found: " + managerId));
+
+        request.setStatus(LeaveStatus.REJECTED);
+        request.setReviewedBy(manager);
+        request.setReviewNote(note);
         request.setUpdatedAt(LocalDateTime.now());
         return toResponse(leaveRequestRepository.save(request));
     }
